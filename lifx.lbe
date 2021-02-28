@@ -1,0 +1,521 @@
+[extension_name]
+LIFX
+[insert_external]
+<!--
+ * @name:LIFX, @version: 1.0, @author: Christinna#9031
+ * -->
+  <button onclick="LBLIFX('devices')">Get my devices</button> 
+  <div id="LIFXdevices">
+  </div>
+[insert_command]
+lioranboardclient.send('{"type":"MESSAGE","topic":"ExtensionCommand","name":"LIFX Basics","boxcount":6,"boxname1":"command|INIT|Get Light|Toggle Power|Effects Off|Activate Scene|Clean Mode|Validate Color|","boxtype1":"string","boxname2":"name","boxtype2":"string","boxname3":"power_off|true|false|","boxtype3":"boolean","boxname4":"duration","boxtype4":"string","boxname5":"ignore","boxtype5":"string","boxname6":"fast|false|true|","boxtype6":"boolean"}');
+lioranboardclient.send('{"type":"MESSAGE","topic":"ExtensionCommand","name":"LIFX Set State","boxcount":7,"boxname1":"selector","boxtype1":"string","boxname2":"power_on|true|false|","boxtype2":"boolean","boxname3":"color","boxtype3":"string","boxname4":"brightness","boxtype4":"string","boxname5":"duration","boxtype5":"string","boxname6":"infrared","boxtype6":"string","boxname7":"fast|false|true|","boxtype7":"boolean"}');
+lioranboardclient.send('{"type":"MESSAGE","topic":"ExtensionCommand","name":"LIFX State Delta","boxcount":7,"boxname1":"selector","boxtype1":"string","boxname2":"power_on|true|false|","boxtype2":"boolean","boxname3":"fast|false|true|","boxtype3":"boolean","boxname4":"duration","boxtype4":"string","boxname5":"infrared","boxtype5":"string","boxname6":"kelvin","boxtype6":"string","boxname7":"hue_sat_brightness","boxtype7":"string"}');
+lioranboardclient.send('{"type":"MESSAGE","topic":"ExtensionCommand","name":"LIFX Breathe Effect","boxcount":7,"boxname1":"selector","boxtype1":"string","boxname2":"power_on|true|false|","boxtype2":"boolean","boxname3":"color","boxtype3":"string","boxname4":"color_from","boxtype4":"string","boxname5":"persist|true|false|","boxtype5":"boolean","boxname6":"peak","boxtype6":"string","boxname7":"period_cycles","boxtype7":"string"}');
+lioranboardclient.send('{"type":"MESSAGE","topic":"ExtensionCommand","name":"LIFX Move Effect","boxcount":6,"boxname1":"selector","boxtype1":"string","boxname2":"power_on|true|false|","boxtype2":"boolean","boxname3":"direction|forward|backward|","boxtype3":"string","boxname4":"period","boxtype4":"string","boxname5":"cycles","boxtype5":"string","boxname6":"fast|false|true|","boxtype6":"boolean"}');
+lioranboardclient.send('{"type":"MESSAGE","topic":"ExtensionCommand","name":"LIFX Morph Effect","boxcount":6,"boxname1":"selector","boxtype1":"string","boxname2":"power_on|true|false|","boxtype2":"boolean","boxname3":"period","boxtype3":"string","boxname4":"duration","boxtype4":"string","boxname5":"palette","boxtype5":"string","boxname6":"fast|false|true|","boxtype6":"boolean"}');
+lioranboardclient.send('{"type":"MESSAGE","topic":"ExtensionCommand","name":"LIFX Flame Effect","boxcount":5,"boxname1":"selector","boxtype1":"string","boxname2":"power_on|true|false|","boxtype2":"boolean","boxname3":"period","boxtype3":"string","boxname4":"duration","boxtype4":"string","boxname5":"fast|false|true|","boxtype5":"boolean"}');
+lioranboardclient.send('{"type":"MESSAGE","topic":"ExtensionCommand","name":"LIFX Pulse Effect","boxcount":7,"boxname1":"selector","boxtype1":"string","boxname2":"power_on|true|false|","boxtype2":"boolean","boxname3":"color","boxtype3":"string","boxname4":"from_color","boxtype4":"string","boxname5":"period","boxtype5":"string","boxname6":"cycles","boxtype6":"string","boxname7":"persist|true|false|","boxtype7":"boolean"}');
+[insert_hook]
+case "LIFXBasics":{
+  if (LioranBoardJSON.command=='INIT'){
+  sessionStorage.setItem('LIFX', JSON.stringify([LioranBoardJSON.name,LioranBoardJSON.power_off]));    
+  }
+  else {
+LBLIFX(LioranBoardJSON.command,LioranBoardJSON.name,LioranBoardJSON.power_off,LioranBoardJSON.duration,LioranBoardJSON.ignore,LioranBoardJSON.fast)}
+}break
+case "LIFXSetState":{
+LBLIFX("Set State",LioranBoardJSON.selector,LioranBoardJSON.power_on,LioranBoardJSON.color,LioranBoardJSON.brightness,LioranBoardJSON.duration,LioranBoardJSON.infrared,LioranBoardJSON.fast)
+}break
+case "LIFXStateDelta":{
+LBLIFX("State Delta",LioranBoardJSON.selector,LioranBoardJSON.power_on,LioranBoardJSON.fast,LioranBoardJSON.duration,LioranBoardJSON.infrared,LioranBoardJSON.kelvin,LioranBoardJSON.hue_sat_brightness)
+}break
+case "LIFXBreatheEffect":{
+LBLIFX("Breathe Effect",LioranBoardJSON.selector,LioranBoardJSON.power_on,LioranBoardJSON.color,LioranBoardJSON.color_from,LioranBoardJSON.persist,LioranBoardJSON.peak,LioranBoardJSON.period_cycles)
+}break
+case "LIFXMoveEffect":{
+LBLIFX("Move Effect",LioranBoardJSON.selector,LioranBoardJSON.power_on,LioranBoardJSON.direction,LioranBoardJSON.period,LioranBoardJSON.cycles,LioranBoardJSON.fast)
+}break
+case "LIFXMorphEffect":{
+LBLIFX("Morph Effect",LioranBoardJSON.selector,LioranBoardJSON.power_on,LioranBoardJSON.period,LioranBoardJSON.duration,LioranBoardJSON.palette,LioranBoardJSON.fast)
+}break
+case "LIFXFlameEffect":{
+LBLIFX("Flame Effect",LioranBoardJSON.selector,LioranBoardJSON.power_on,LioranBoardJSON.period,LioranBoardJSON.duration,LioranBoardJSON.fast)
+}break
+case "LIFXPulseEffect":{
+LBLIFX("Pulse Effect",LioranBoardJSON.selector,LioranBoardJSON.power_on,LioranBoardJSON.color,LioranBoardJSON.from_color,LioranBoardJSON.period,LioranBoardJSON.cycles,LioranBoardJSON.persist)
+}break
+[insert_script]
+async function LBLIFX(command,name,power,value1,value2,value3,value4,value5){	
+
+  if (!name && command!='devices'){
+  LBAlert('Error: Name/Selector value is empty.')
+  return 0
+  }
+  
+  const oauthtoken = JSON.parse(sessionStorage.getItem('LIFX'))[0]
+  const notif = JSON.parse(sessionStorage.getItem('LIFX'))[1]
+  let method = 'POST'
+  let url, colorTest
+  let body = {}
+  
+  switch (command){
+  case "Validate Color": 
+  method = 'GET'
+  url = 'color?string='+name
+  break;
+  case "Get Light": 
+  method = 'GET'
+  url = 'lights/'+name
+  break;
+  case "Set State": 
+  method = 'PUT'
+  url = 'lights/'+name+'/state'
+  power = (power==true)? "on":"off"
+  body = {power:power, color:value1,brightness : value2,duration : value3, infrared :value4, fast :value5}
+  break;
+  case "State Delta": 
+  url = 'lights/'+name+'/state/delta'
+  let hue = value5.split(',')[0] 
+  let sat = value5.split(',')[1] 
+  let brightness = value5.split(',')[2] 
+  power = (power==true)? "on":"off"
+  body = {power:power, fast:value1, duration:value2,infrared:value3,hue:hue,saturation:sat,brightness:brightness,kelvin:value4}
+  break;
+  case "Toggle Power": 
+  url = 'lights/'+name+'/toggle'
+  body = {
+  duration:value1
+  }
+  break;
+  case "Breathe Effect": 
+  url = 'lights/'+name+'/effects/breathe'
+  let period = value5.split(',')[0] 
+  let cycles =value5.split(',')[1] 
+  body = {power_on: power,color: value1,from_color: value2,persist: value3,peak: value4,period: period,cycles: cycles}
+  break;
+  case "Move Effect": 
+  url = 'lights/'+name+'/effects/move'
+  body = {power_on:power,direction:value1,period:value2,cycles:value3,fast:value4,}
+  break;
+  case "Morph Effect":
+  url = 'lights/'+name+'/effects/morph'
+  body = {power_on: power,period:value1,duration: value2,palette: value3.split(','),fast: value4}
+  break;
+  case "Flame Effect": 
+  url = 'lights/'+name+'/effects/flame'
+  body = {power_on:power,period: value1,duration: value2,fast:value3}
+  break;
+  case "Pulse Effect": 
+  url = 'lights/'+name+'/effects/pulse'
+  body = {power_on:power,color:value1,from_color:value2,period:value3,cycles:value4,persist:value5}
+  break;
+  case "Effects Off": 
+  url = 'lights/'+name+'/effects/off'
+  body = {
+  power_off:power
+  }
+  break;
+  case "Activate Scene": 
+  let fetchID = await Lifx ('GET','scenes')
+  let id = fetchID.filter(item=>item.name.toLowerCase().includes(name))
+  if (id[0]){
+  url = 'scenes/scene_id:'+id[0].uuid+'/activate'
+  }
+  method = 'PUT'
+  body = {duration:value1,ignore:value2.split(','),fast:value4}
+  break;
+  case "Clean Mode":
+  url = 'lights/'+name+'/clean'
+  body = {stop: power,duration: value1} 
+  break;
+  case "devices": 
+  method = 'GET'
+  url = 'lights/all'
+  break;
+  }
+  if (Object.keys(body).length != 0){
+    await CheckValues ()}
+
+  
+  async  function CheckValues (){
+    let float = ['brightness','duration','infrared','peak','saturation','peak','cycles','period','saturation']
+    let int = ['hue','kelvin']
+   for (let i = 0; i < Object.keys(body).length; i++) {
+   if (int.includes(Object.keys(body)[i])){
+     body[Object.keys(body)[i]] = (!isNaN(parseInt(body[Object.keys(body)[i]]))) ?  parseInt(body[Object.keys(body)[i]]) : undefined }
+      else if(float.includes(Object.keys(body)[i])) {
+       body[Object.keys(body)[i]] = (!isNaN(parseFloat(body[Object.keys(body)[i]]))) ?  parseFloat(body[Object.keys(body)[i]]) : undefined
+     }
+   }
+ }
+
+//console.log(body)
+  
+  let result = await Lifx (method,url,body)
+  .then (data=>{
+      //console.log(data)
+     if (command=='Get Light'){
+      lioranboardclient.send('{"type":"MESSAGE","topic":"DeleteStack","name":"lifx"}')
+      let obj = {'id':data[0].id,'uuid':data[0].uuid,'label':data[0].label,'connected':data[0].connected,'power':data[0].power,'hue':data[0].color.hue,'saturation':data[0].color.saturation,'kelvin':data[0].color.kelvin,'brightness':data[0].brightness,'effect':data[0].effect,'group_id':data[0].group.id,'group_name':data[0].group.name,'location_id':data[0].location.id,'location_name':data[0].location.name,'last_seen':data[0].last_seen,'seconds_since_seen':data[0].seconds_since_seen}
+      for (let i = 0; i < Object.keys(obj).length; i++) {
+      if (Object.values(obj)[i] != undefined) {
+          let value = Object.keys(obj)[i] + ": " + Object.values(obj)[i]
+          lioranboardclient.send('{"type":"MESSAGE","topic":"AddStack","name":"lifx","position":"top","value":"' + value + '"}')
+      }
+  }
+  }    else if (command == 'devices') {
+      let devices = document.getElementById('LIFXdevices')
+      devices.innerHTML=""
+      data.forEach(function(item) {
+          let div = document.createElement("div");
+          div.innerHTML = '<br><b>' + item.label + '</b>'
+          let ul = document.createElement('ul');
+          for (let i = 0; i < Object.keys(item).length; i++) {
+              let obj = Object.keys(item)[i]
+              let li = document.createElement('li');
+              if (typeof Object.values(item)[i] === "object") {
+                  li.innerHTML = Object.keys(item)[i]
+                  let obj = Object.values(item)[i]
+                  let ul2 = document.createElement('ul');
+                  for (let k = 0; k < Object.keys(obj).length; k++) {
+                      let li2 = document.createElement('li');
+                      li2.innerHTML = Object.keys(obj)[k] + ": " + JSON.stringify(Object.values(obj)[k]).replace(/"/g, '').replace(/,/g, ', ')
+                      ul2.appendChild(li2)
+                  }
+                  li.appendChild(ul2)
+              } else {
+                  li.innerHTML = Object.keys(item)[i] + ": " + Object.values(item)[i]
+              }
+              ul.appendChild(li)
+          }
+          div.appendChild(ul)
+          devices.appendChild(div)
+      })
+  }
+  if (notif) {
+      LBAlert(command + ": Success.")
+  }})
+  .catch (e=>{
+  LBAlert(command+": "+e)
+  console.log(e)
+  })
+  
+  function LBAlert (message){
+  lioranboardclient.send('{"type":"MESSAGE","topic":"AlertMessage","message":"LIFX '+message+'"}')} 
+  
+  async function Lifx (method,url,body){
+      const data = {
+           method: method,
+          headers: {
+         "Authorization": "Bearer " + oauthtoken,
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify(body),
+     }
+  
+     if (method=="GET"){
+      delete data['body'];
+  
+     }
+      const response = await fetch ('https://api.lifx.com/v1/'+url,data)
+       let content;
+       if (!response.ok){
+           let data = await response.json()
+           let error = data.message || data.error || "Something went wrong."
+           throw new Error(error)
+         } else {
+           try {
+           content = await response.json()}
+           catch(e){}
+       }
+       return content;	
+      }
+  }
+[insert_over]
+[buttons_0x2]
+activepress="0.000000"
+border_size="0.000000"
+combine="0.000000"
+type="websocketaction+pubsubaction+"
+picture=""
+text="LIFX GET # LIGHT"
+color="12632256.000000"
+button_id="ID35"
+extensiontrigger0="!transmitteralways"
+pubsubaction0="7.000000"
+pubsubqueue="0.000000"
+websocketdelay3="0.000000"
+websocketvalue8_3=""
+websocketvalue7_3="false"
+websocketvalue6_3=""
+websocketvalue5_3=""
+websocketvalue4_3="true"
+websocketvalue3_3="label:Shrimp Lord"
+websocketvalue2_3="Get Light"
+websocketvalue1_3="LIFX Basics"
+websocketaction3="71.000000"
+websocketdelay2="0.000000"
+websocketvalue8_2=""
+websocketvalue7_2=""
+websocketvalue6_2=""
+websocketvalue5_2=""
+websocketvalue4_2=""
+websocketvalue3_2=""
+websocketvalue2_2=""
+websocketvalue1_2="(Ignore other input boxes)"
+websocketaction2="92.000000"
+websocketdelay1="0.000000"
+websocketvalue8_1=""
+websocketvalue7_1=""
+websocketvalue6_1=""
+websocketvalue5_1=""
+websocketvalue4_1=""
+websocketvalue3_1=""
+websocketvalue2_1=""
+websocketvalue1_1="name = Label or id of your light. Has to include the selector. For example: 'label:My Light'"
+websocketaction1="92.000000"
+websocketdelay0="0.000000"
+websocketvalue8_0=""
+websocketvalue7_0=""
+websocketvalue6_0=""
+websocketvalue5_0=""
+websocketvalue4_0=""
+websocketvalue3_0=""
+websocketvalue2_0=""
+websocketvalue1_0="This will create a stack called 'lifx' with information about a single light device. "
+websocketaction0="92.000000"
+[buttons_1x1]
+activepress="0.000000"
+border_size="0.000000"
+combine="0.000000"
+type="websocketaction+"
+picture=""
+text="LIFX BREATHE # EFFECT"
+color="12632256.000000"
+button_id="ID34"
+websocketdelay4="0.000000"
+websocketvalue8_4="5,20"
+websocketvalue7_4="1"
+websocketvalue6_4="true"
+websocketvalue5_4="blue"
+websocketvalue4_4="red"
+websocketvalue3_4="true"
+websocketvalue2_4="label:Shrimp Lord"
+websocketvalue1_4="LIFX Breathe Effect"
+websocketaction4="71.000000"
+websocketdelay3="0.000000"
+websocketvalue8_3=""
+websocketvalue7_3=""
+websocketvalue6_3=""
+websocketvalue5_3=""
+websocketvalue4_3=""
+websocketvalue3_3=""
+websocketvalue2_3=""
+websocketvalue1_3="period_cycles = two values separated by comma.  <PERIOD>, <CYCLES>"
+websocketaction3="92.000000"
+websocketdelay2="0.000000"
+websocketvalue8_2=""
+websocketvalue7_2=""
+websocketvalue6_2=""
+websocketvalue5_2=""
+websocketvalue4_2=""
+websocketvalue3_2=""
+websocketvalue2_2=""
+websocketvalue1_2="examples of selectors:  'label:My Light', 'group:kitchen', 'location:home'"
+websocketaction2="92.000000"
+websocketdelay1="0.000000"
+websocketvalue8_1=""
+websocketvalue7_1=""
+websocketvalue6_1=""
+websocketvalue5_1=""
+websocketvalue4_1=""
+websocketvalue3_1=""
+websocketvalue2_1=""
+websocketvalue1_1="selector = selector to limit which lights are toggled. Must include the selector itself. "
+websocketaction1="92.000000"
+websocketdelay0="0.000000"
+websocketvalue8_0=""
+websocketvalue7_0=""
+websocketvalue6_0=""
+websocketvalue5_0=""
+websocketvalue4_0=""
+websocketvalue3_0=""
+websocketvalue2_0=""
+websocketvalue1_0="Example button on how to set up breathe effect for your light. "
+websocketaction0="92.000000"
+[buttons_0x1]
+activepress="0.000000"
+border_size="0.000000"
+combine="0.000000"
+type="websocketaction+"
+picture=""
+text="LIFX VALIDATE # COLOR"
+color="12632256.000000"
+button_id="ID33"
+websocketdelay3="0.000000"
+websocketvalue8_3="false"
+websocketvalue7_3="false"
+websocketvalue6_3=""
+websocketvalue5_3=""
+websocketvalue4_3="true"
+websocketvalue3_3="#2403fc"
+websocketvalue2_3="Validate Color"
+websocketvalue1_3="LIFX Basics"
+websocketaction3="71.000000"
+websocketdelay2="0.000000"
+websocketvalue8_2=""
+websocketvalue7_2=""
+websocketvalue6_2=""
+websocketvalue5_2=""
+websocketvalue4_2=""
+websocketvalue3_2=""
+websocketvalue2_2=""
+websocketvalue1_2="name = color. Ignore other input boxes. "
+websocketaction2="92.000000"
+websocketdelay1="0.000000"
+websocketvalue8_1=""
+websocketvalue7_1=""
+websocketvalue6_1=""
+websocketvalue5_1=""
+websocketvalue4_1=""
+websocketvalue3_1=""
+websocketvalue2_1=""
+websocketvalue1_1="If the color is valid, you will get a yellow notif message þSuccessþ. "
+websocketaction1="92.000000"
+websocketdelay0="0.000000"
+websocketvalue8_0=""
+websocketvalue7_0=""
+websocketvalue6_0=""
+websocketvalue5_0=""
+websocketvalue4_0=""
+websocketvalue3_0=""
+websocketvalue2_0=""
+websocketvalue1_0="Example button on how to validate a color you want to feed the extension. "
+websocketaction0="92.000000"
+[buttons_1x0]
+activepress="0.000000"
+border_size="0.000000"
+combine="0.000000"
+type="websocketaction+"
+picture=""
+text="LIFX Set # State"
+color="12632256.000000"
+button_id="ID32"
+websocketdelay3="0.000000"
+websocketvalue8_3="false"
+websocketvalue7_3="1"
+websocketvalue6_3="5"
+websocketvalue5_3="0.3"
+websocketvalue4_3="red"
+websocketvalue3_3="true"
+websocketvalue2_3="label:Shrimp Lord"
+websocketvalue1_3="LIFX Set State"
+websocketaction3="71.000000"
+websocketdelay2="0.000000"
+websocketvalue8_2=""
+websocketvalue7_2=""
+websocketvalue6_2=""
+websocketvalue5_2=""
+websocketvalue4_2=""
+websocketvalue3_2=""
+websocketvalue2_2=""
+websocketvalue1_2="examples of selectors:  'label:My Light', 'group:kitchen', 'location:home'"
+websocketaction2="92.000000"
+websocketdelay1="0.000000"
+websocketvalue8_1=""
+websocketvalue7_1=""
+websocketvalue6_1=""
+websocketvalue5_1=""
+websocketvalue4_1=""
+websocketvalue3_1=""
+websocketvalue2_1=""
+websocketvalue1_1="selector = selector to limit which lights are toggled. Must include the selector itself. "
+websocketaction1="92.000000"
+websocketdelay0="0.000000"
+websocketvalue8_0=""
+websocketvalue7_0=""
+websocketvalue6_0=""
+websocketvalue5_0=""
+websocketvalue4_0=""
+websocketvalue3_0=""
+websocketvalue2_0=""
+websocketvalue1_0="Example button on how to set a new state for your light. "
+websocketaction0="92.000000"
+[buttons_0x0]
+activepress="0.000000"
+border_size="0.000000"
+combine="0.000000"
+type="websocketaction+pubsubaction+"
+picture=""
+text="LIFX INIT"
+color="12632256.000000"
+button_id="ID31"
+extensiontrigger0="transmitteralways"
+pubsubaction0="7.000000"
+pubsubqueue="0.000000"
+websocketdelay5="0.000000"
+websocketvalue8_5=""
+websocketvalue7_5="false"
+websocketvalue6_5=""
+websocketvalue5_5=""
+websocketvalue4_5="true"
+websocketvalue3_5="YOUR TOKEN"
+websocketvalue2_5="INIT"
+websocketvalue1_5="LIFX Basics"
+websocketaction5="71.000000"
+websocketdelay4="0.000000"
+websocketvalue8_4=""
+websocketvalue7_4=""
+websocketvalue6_4=""
+websocketvalue5_4=""
+websocketvalue4_4=""
+websocketvalue3_4=""
+websocketvalue2_4=""
+websocketvalue1_4="(ignore other input boxes)"
+websocketaction4="92.000000"
+websocketdelay3="0.000000"
+websocketvalue8_3=""
+websocketvalue7_3=""
+websocketvalue6_3=""
+websocketvalue5_3=""
+websocketvalue4_3=""
+websocketvalue3_3=""
+websocketvalue2_3=""
+websocketvalue1_3="power_off false = will receive yellow notif message only if any errors come up"
+websocketaction3="92.000000"
+websocketdelay2="0.000000"
+websocketvalue8_2=""
+websocketvalue7_2=""
+websocketvalue6_2=""
+websocketvalue5_2=""
+websocketvalue4_2=""
+websocketvalue3_2=""
+websocketvalue2_2=""
+websocketvalue1_2="name = your token, power_off true = will receive yellow notif message for every successful request"
+websocketaction2="92.000000"
+websocketdelay1="0.000000"
+websocketvalue8_1=""
+websocketvalue7_1=""
+websocketvalue6_1=""
+websocketvalue5_1=""
+websocketvalue4_1=""
+websocketvalue3_1=""
+websocketvalue2_1=""
+websocketvalue1_1="You can retrieve your token here: https://cloud.lifx.com/settings"
+websocketaction1="92.000000"
+websocketdelay0="0.000000"
+websocketvalue8_0=""
+websocketvalue7_0=""
+websocketvalue6_0=""
+websocketvalue5_0=""
+websocketvalue4_0=""
+websocketvalue3_0=""
+websocketvalue2_0=""
+websocketvalue1_0="Fill in the values and forget about the button. It will be auto initiated every time you open Transmitter."
+websocketaction0="92.000000"
+[configs]
+name="LIFX"
+background_color="8947848.000000"
+grid_height="3.000000"
+grid_width="2.000000"
