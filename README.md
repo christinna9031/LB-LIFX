@@ -4,7 +4,7 @@
 This extension for LioranBoard allows you to fully control your LIFX lights. It is superior to using IFTTT as there's an extremely short delay and you can execute requests in rapid succession.       
 All you need is to get your LIFX token which is a very simple process that takes less than a minute.       
 
-Features:      
+**Features:**      
 List all my lights (Transmitter only) - lists all your LIFX devices and their current state/manufacturer information       
 Get Light - gets a state of one single light    
 Toggle Power    
@@ -19,9 +19,9 @@ The extension also has a 'fast mode' where you can execute the command without i
 
 Setup instructions can be found at https://christinna9031.github.io/LBDocumentation/externalext.html#Lifx. 
 
-Note: I do not own LIFX lights, this extension was made with RamsReef's help who was kind enough to let me control one of his lights. 
+*Note: I do not own LIFX lights, this extension was made with RamsReef's help who was kind enough to let me control one of his lights.* 
 
-If you would like to support me in creating more extensions for LioranBoard, please check out this page: https://github.com/sponsors/christinna9031.
+If you would like to **support me in creating more extensions for LioranBoard**, please check out this page: https://github.com/sponsors/christinna9031.
 
 **How to install an extension:**
 1. Download the .lbe extension file
