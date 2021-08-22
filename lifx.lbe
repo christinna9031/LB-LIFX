@@ -118,10 +118,10 @@ async function LBLIFX(command,name,power,value1,value2,value3,value4,value5){
   break;
   case "Activate Scene": 
   let fetchID = await Lifx ('GET','scenes')
-  let id = fetchID.filter(item=>item.name.toLowerCase().includes(name))
-  if (id[0]){
-  url = 'scenes/scene_id:'+id[0].uuid+'/activate'
-  }
+  console.log(fetchID)
+  let id = fetchID.filter(item=>item.name.toLowerCase() == name.toLowerCase())
+  if (id) url = 'scenes/scene_id:'+id[0].uuid+'/activate'
+  else {LBAlert(`Error: Scene ${name} not found!`); return}
   method = 'PUT'
   body = {duration:value1,ignore:value2.split(','),fast:value4}
   break;
